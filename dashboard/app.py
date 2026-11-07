@@ -3,8 +3,10 @@ import threading   # lets us use a "lock" so two requests don't clash
 import time        # gives us the current time in seconds
 import uuid        # makes a random ID for each alert
 from datetime import datetime   # gives us the date and time as text
+import json        # saves contacts to a file
 
 from flask import Flask, jsonify, request   # request = the data someone sent us
+from sms import compose_alert_message, send_sms, sent_messages   # writes and sends the texts
 
 # Create the web server
 app = Flask(__name__)
@@ -13,12 +15,40 @@ app = Flask(__name__)
 ESCALATE_AFTER_SECONDS = int(os.environ.get("ESCALATE_AFTER", "60"))
 # Sounds that are dangerous (these get texted if nobody responds)
 URGENT_SOUNDS = {"smoke alarm", "fire alarm", "carbon monoxide alarm", "baby crying"}
+# Set AUTO_ESCALATE=0 if the listener should decide when to text instead
+AUTO_ESCALATE = os.environ.get("AUTO_ESCALATE", "1") == "1"
+# The person's name used in the texts
+HOME_NAME = os.environ.get("HOME_NAME", "Maria")
+# Where backup contacts are saved so they survive a restart
+CONTACTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "contacts.json")
 
 # A lock: only one request can change the alerts list at a time
 lock = threading.Lock()
 
 # The list of all alerts. Newest one goes first.
 events = []
+# Loads saved contacts, or starts with one demo neighbour
+def load_contacts():
+    try:
+        with open(CONTACTS_FILE) as fh:
+            data = json.load(fh)
+            if isinstance(data, list):
+                return data
+    except (OSError, ValueError):
+        pass
+    return [{"id": "c1", "name": "Neighbour (demo)", "phone": "+15875550101", "relation": "Neighbour"}]
+
+
+# Saves contacts to contacts.json (only call this while holding the lock)
+def save_contacts():
+    try:
+        with open(CONTACTS_FILE, "w") as fh:
+            json.dump(contacts, fh, indent=2)
+    except OSError as exc:
+        print(f"[Could not save contacts] {exc}")
+
+
+contacts = load_contacts()  # the backup contacts
 # Gives the time right now as text, like "2026-11-07T16:35:05"
 def now_iso(): 
     return datetime.now().isoformat(timespec="seconds") 
@@ -27,6 +57,46 @@ def find_event(event_id):
     if event_id == "latest":
         return next((e for e in events if e["status"] == "alerting"), None)
     return next((e for e in events if e["id"] == event_id), None)
+# Marks an alert as escalated so it only gets texted once (only call this while holding the lock)
+def claim_for_escalation(event):
+    if event["status"] != "alerting":
+        return None
+    event["status"] = "escalated"
+    event["escalated_at"] = now_iso()
+    return dict(event), [dict(c) for c in contacts]
+
+
+# Writes and sends the texts. Runs without the lock because texting can be slow.
+def run_escalation(event_snapshot, contact_list):
+    body, source = compose_alert_message(event_snapshot, HOME_NAME, ESCALATE_AFTER_SECONDS)
+    notified = []
+    for c in contact_list:
+        result = send_sms(c["phone"], body, written_by=source)
+        notified.append({"name": c["name"], "phone": c["phone"], "message": body, "written_by": source, **result})
+    with lock:  # save who got texted back onto the alert
+        live = find_event(event_snapshot["id"])
+        if live:
+            live["notified"] = notified
+            live["message_source"] = source
+
+
+# Starts texting in the background so the server doesn't freeze (only call this while holding the lock)
+def escalate_in_background(event):
+    claimed = claim_for_escalation(event)
+    if claimed:
+        threading.Thread(target=run_escalation, args=claimed, daemon=True).start()
+
+
+# Runs forever: every second, checks for alerts whose time ran out
+def escalation_loop():
+    while True:
+        time.sleep(1)
+        if not AUTO_ESCALATE:
+            continue
+        with lock:
+            for e in events:
+                if e["status"] == "alerting" and time.time() >= e["deadline"]:
+                    escalate_in_background(e)
 
 
 # Home page: just shows the server is on
