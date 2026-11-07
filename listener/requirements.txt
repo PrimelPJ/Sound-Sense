@@ -1,0 +1,6 @@
+numpy
+requests
+pyserial
+sounddevice
+tensorflow>=2.16
+tensorflow-hub
