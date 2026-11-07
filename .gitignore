@@ -9,3 +9,4 @@ venv/
 .elasticbeanstalk/
 node_modules/
 dist/
+dashboard/contacts.json
