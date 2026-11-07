@@ -1,0 +1,5 @@
+[
+  {"name": "Family (demo)", "phone": "+15875550101", "role": "family"},
+  {"name": "Neighbour (demo)", "phone": "+15875550102", "role": "neighbour"},
+  {"name": "Building manager (demo)", "phone": "+15875550103", "role": "building"}
+]
