@@ -199,7 +199,7 @@ def escalate_now(event_id):
             return jsonify(error="No matching alert"), 404
         escalate_in_background(event)
         return jsonify(event)
-    # Shows all backup contacts
+# Shows all backup contacts 
 @app.get("/api/contacts")
 def list_contacts():
     with lock:
