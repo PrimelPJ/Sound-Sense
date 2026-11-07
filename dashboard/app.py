@@ -96,7 +96,10 @@ def escalation_loop():
         with lock:
             for e in events:
                 if e["status"] == "alerting" and time.time() >= e["deadline"]:
-                    escalate_in_background(e)
+                    if e["urgent"]:
+                        escalate_in_background(e)
+                    else:
+                        e["status"] = "info"   # doorbell, kettle: heads up only, nobody gets texted
 
 
 
@@ -113,7 +116,7 @@ def health():
                    real_sms=bool(os.environ.get("TWILIO_ACCOUNT_SID")))
 
 
-# Shows the list of alerts (the dashboard and Marwan's listener read this)
+# Shows the list of alerts (the dashboard and the listener read this)
 @app.get("/api/events")
 def list_events():
     with lock:                      # lock the list while we read it
@@ -259,6 +262,6 @@ def list_messages():
 threading.Thread(target=escalation_loop, daemon=True).start()
 # Start the server when we run "python app.py"
 if __name__ == "__main__":
-    # host="0.0.0.0" lets other laptops (Marwan's) connect, port 5000 is the address
+    # host="0.0.0.0" lets other laptops (the listener) connect, port 5000 is the address
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")))  
 

@@ -51,6 +51,7 @@
   .pill.alerting { background: var(--red-bg); color: var(--red); }
   .pill.acknowledged { background: var(--green-bg); color: var(--green); }
   .pill.escalated { background: var(--amber-bg); color: var(--amber); }
+  .pill.info { background: #e8eefc; color: var(--blue); }
 
   .contact { display: flex; justify-content: space-between; align-items: center; gap: 8px;
     padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -172,7 +173,7 @@ function renderLog(events) {
     <td>${timeOf(e.detected_at)}</td>
     <td>${esc(label(e.sound))}${e.urgent ? " ⚠" : ""}</td>
     <td>${Math.round(e.confidence * 100)}%</td>
-    <td><span class="pill ${e.status}">${e.status === "alerting" ? "Waiting" : e.status === "acknowledged" ? "Responded" : "Escalated"}</span></td>
+    <td><span class="pill ${e.status}">${e.status === "alerting" ? "Waiting" : e.status === "acknowledged" ? "Responded" : e.status === "info" ? "Heads up" : "Escalated"}</span></td>
     <td>${e.notified.length ? esc(e.notified.map((n) => n.name).join(", ")) : "—"}</td></tr>`).join("");
 }
 
