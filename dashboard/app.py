@@ -190,6 +190,25 @@ def acknowledge(event_id):
             event["acknowledged_at"] = now_iso()     # remember when
         return jsonify(event)
 
+# Texts the backup contacts right away (used by the "Skip timer" demo button)
+@app.post("/api/events/<event_id>/escalate")
+def escalate_now(event_id):
+    with lock:
+        event = find_event(event_id)
+        if not event:
+            return jsonify(error="No matching alert"), 404
+        escalate_in_background(event)
+        return jsonify(event)
+
+
+# Shows every text that was sent, for the demo
+@app.get("/api/messages")
+def list_messages():
+    return jsonify(messages=sent_messages[-20:])
+
+
+# Start the timer that checks for alerts nobody answered
+threading.Thread(target=escalation_loop, daemon=True).start()
 # Start the server when we run "python app.py"
 if __name__ == "__main__":
     # host="0.0.0.0" lets other laptops (Marwan's) connect, port 5000 is the address
