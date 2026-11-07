@@ -65,11 +65,16 @@ ALISHA_NAMES = {
 }
 
 
+# Her statuses -> the ones the controller uses.
+ALISHA_STATUS = {"alerting": "active", "acknowledged": "acked", "escalated": "escalating"}
+
+
 class AlishaApi(Api):
     """Talks to Alisha's dashboard API.
 
-    POST /api/events             {"sound": "smoke alarm", "confidence": 0.94}
-    POST /api/events/latest/ack  when the button is pressed
+    POST /api/events            {"sound": "smoke alarm", "confidence": 0.94}
+    POST /api/events/{id}/ack   when the button is pressed ("latest" if we have no id)
+    GET  /api/events/{id}       to notice "I'm OK" pressed on the dashboard
     """
 
     def health(self) -> bool:
@@ -79,18 +84,25 @@ class AlishaApi(Api):
         except Exception:
             return False
 
+    def _convert(self, resp) -> dict:
+        resp = dict(resp) if isinstance(resp, dict) else {}
+        resp.setdefault("id", "latest")
+        resp["status"] = ALISHA_STATUS.get(resp.get("status"), resp.get("status") or "active")
+        return resp
+
     def post_event(self, device_id: str, sound: str, confidence: float) -> dict | None:
         body = {"sound": ALISHA_NAMES.get(sound, sound), "confidence": confidence}
         resp = self._call("POST", "/api/events", json=body)
         if resp is None:
             return None
-        resp = resp if isinstance(resp, dict) else {}
-        # Her API acks "latest", so we don't need her event id.
-        return {"id": resp.get("id", "latest"), "status": "active", **resp}
+        return self._convert(resp)
 
     def ack(self, event_id, by: str = "device") -> dict | None:
-        return self._call("POST", "/api/events/latest/ack")
+        # Ack this exact alert, so a newer doorbell can't take the smoke alarm's "I'm OK".
+        return self._call("POST", f"/api/events/{event_id or 'latest'}/ack")
 
     def get_event(self, event_id) -> dict | None:
-        # No status endpoint yet, so a dashboard "I'm OK" can't clear the Arduino.
-        return None
+        if event_id == "latest":
+            return None
+        resp = self._call("GET", f"/api/events/{event_id}")
+        return self._convert(resp) if resp is not None else None
