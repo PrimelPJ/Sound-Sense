@@ -199,6 +199,39 @@ def escalate_now(event_id):
             return jsonify(error="No matching alert"), 404
         escalate_in_background(event)
         return jsonify(event)
+    # Shows all backup contacts
+@app.get("/api/contacts")
+def list_contacts():
+    with lock:
+        return jsonify(contacts=contacts)
+
+
+# Adds a backup contact, like {"name": "Mom", "phone": "+15875550199", "relation": "Family"}
+@app.post("/api/contacts")
+def add_contact():
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", "")).strip()
+    phone = str(data.get("phone", "")).strip()
+    if not name or not phone:   # both are needed
+        return jsonify(error="Name and phone are both required"), 400
+    contact = {"id": uuid.uuid4().hex[:8], "name": name, "phone": phone,
+               "relation": str(data.get("relation", "")).strip()}
+    with lock:
+        contacts.append(contact)
+        save_contacts()          # keep it after a restart
+    return jsonify(contact), 201
+
+
+# Removes a backup contact by its ID
+@app.delete("/api/contacts/<contact_id>")
+def delete_contact(contact_id):
+    with lock:
+        before = len(contacts)
+        contacts[:] = [c for c in contacts if c["id"] != contact_id]   # keep everyone except this one
+        if len(contacts) == before:
+            return jsonify(error="Contact not found"), 404
+        save_contacts()
+    return jsonify(ok=True)
 
 
 # Shows every text that was sent, for the demo
