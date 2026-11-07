@@ -1,0 +1,11 @@
+#!/bin/sh
+# Blocks staged changes that name an AI tool.
+BLOCKED='cl[a]ude|anthr[o]pic'
+
+hits=$(git diff --cached -U0 --no-color | grep '^+' | grep -v '^+++' | grep -iE "$BLOCKED")
+if [ -n "$hits" ]; then
+  echo "Commit blocked: these added lines name an AI tool:"
+  echo "$hits"
+  echo "Remove them and commit again."
+  exit 1
+fi

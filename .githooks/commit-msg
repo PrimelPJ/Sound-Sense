@@ -1,0 +1,17 @@
+#!/bin/sh
+# Blocks commit messages that name an AI tool or add a co-author.
+BLOCKED='cl[a]ude|anthr[o]pic|co-authored-by'
+
+if grep -v '^#' "$1" | grep -qiE "$BLOCKED"; then
+  echo "Commit blocked: the message names an AI tool or a co-author line."
+  echo "Remove that line and commit again."
+  exit 1
+fi
+
+email=$(git config user.email)
+name=$(git config user.name)
+if echo "$email $name" | grep -qiE 'cl[a]ude|anthr[o]pic'; then
+  echo "Commit blocked: git user is '$name <$email>'."
+  echo "Set your own: git config user.name \"Your Name\" && git config user.email \"you@example.com\""
+  exit 1
+fi
