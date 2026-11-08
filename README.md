@@ -3,7 +3,7 @@
 SoundSense helps Deaf and hard of hearing people know what is happening at home.
 It hears a smoke alarm, glass breaking, a baby crying, an emergency siren, the doorbell,
 a phone ringing or a kettle and turns it into a 
-flashing light, a vibration and a live alert on the dashboard. If a serious
+flashing light, a buzz and a live alert on the dashboard. If a serious
 alarm keeps going and nobody presses "I'm OK", it texts family, then a
 neighbour, then the building.
 
@@ -12,7 +12,7 @@ Built at Hack the Change 2026.
 ## How it works
 
 ```
-laptop mic -> YAMNet sound model -> listener ---USB---> Arduino (light, vibration, "I'm OK" button)
+laptop mic -> YAMNet sound model -> listener ---USB---> Arduino (light, buzzer, "I'm OK" and "Get help" buttons)
                                         |
                                         v
                                     API server ---> escalation texts (family, neighbour, building)
@@ -39,7 +39,7 @@ In a real product the laptop would be a small $10 to $20 Wi-Fi board (like an ES
 | Folder | What | Owner |
 | --- | --- | --- |
 | `listener/` | Mic, sound model, detection, Arduino link | Primel |
-| `arduino/` | Light, vibration and button sketch | Primel |
+| `arduino/` | Light, buzzer and button sketch | Primel |
 | `dashboard/` | Dashboard, API (port 5000) and text alerts | Alisha |
 | `server/` | Backup API with the family, neighbour, building escalation chain | Primel |
 
