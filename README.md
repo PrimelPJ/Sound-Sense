@@ -122,7 +122,7 @@ Useful options:
 | `python listener.py --threshold smoke_alarm=0.4` | Raise a threshold if a noisy room causes false alerts |
 | `python listener.py --list-mics` then `--mic 2` | Pick a different microphone |
 | `python listener.py --no-arduino` | Run without the board |
-| `python listener.py --simulate` | Type `smoke`, `glass`, `baby`, `siren`, `door`, `phone`, `kettle`, `ok`.|Demo backup if the room is too loud |
+| `python listener.py --simulate` | Type `smoke`, `glass`, `baby`, `siren`, `door`, `phone`, `kettle`, `ok`. Demo backup if the room is too loud |
 | `--api https://your-server` | Point at a deployed API |
 | `--backend soundsense` | Use the backup `server/` (port 8000) instead of the dashboard API |
 
@@ -163,7 +163,7 @@ Everyone builds against these.
 }
 ```
 
-`status` is one of: `info` (doorbell, kettle: heads up only),  `active` (waiting for "I'm OK"),
+`status` is one of: `info` (siren, doorbell, phone, kettle: heads up only), `active` (waiting for "I'm OK"),
 `escalating` (texts have gone out), `unanswered` (everyone was texted), `acked`.
 
 **Live messages** on `/live` (JSON, one per change)
@@ -181,7 +181,7 @@ Everyone builds against these.
 
 | Direction | Message |
 | --- | --- |
-| Laptop to Arduino | `ALERT smoke_alarm`, `ALERT baby_cry`, `ALERT doorbell`, `ALERT kettle`, `CLEAR`, `PING`, `TEST` |
+| Laptop to Arduino | `ALERT <sound>` (any sound above), `CLEAR`, `PING`, `TEST` | 
 | Arduino to laptop | `READY` on boot, `ACK` when "I'm OK" is pressed, `PONG` |
 
 **Alert patterns**
