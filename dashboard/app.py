@@ -5,6 +5,13 @@ import uuid        # makes a random ID for each alert
 from datetime import datetime   # gives us the date and time as text
 import json        # saves contacts to a file
 
+# Load settings like Twilio keys from dashboard/.env, if there is one (it is never committed)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+except ImportError:   # python-dotenv not installed: settings come from the terminal instead
+    pass
+
 from flask import Flask, jsonify, render_template, request   # render_template = shows an HTML page
 from sms import compose_alert_message, send_sms, sent_messages   # writes and sends the texts
 
