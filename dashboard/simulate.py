@@ -11,7 +11,7 @@ import os
 import urllib.error
 import urllib.request
 
-SERVER = os.enviro
+SERVER = os.environ.get("SOUNDSENSE_URL", "http://localhost:5000")
 SOUNDS = {"s": ("smoke alarm", 0.94), "g": ("glass breaking", 0.86), "b": ("baby crying", 0.81),
           "e": ("emergency siren", 0.83), "d": ("doorbell", 0.88), "p": ("phone ringing", 0.79)}
 

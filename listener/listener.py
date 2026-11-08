@@ -3,7 +3,7 @@
 Normal run:        python listener.py
 Tune thresholds:   python listener.py --show-scores
 No board:          python listener.py --no-arduino
-Demo backup:       python listener.py --simulate   (type smoke, baby, door, kettle, ok, q)
+Demo backup:       python listener.py --simulate  (type smoke, glass, baby, siren, door, phone, kettle, ok, q)
 """
 
 import argparse
@@ -95,7 +95,7 @@ def run_simulate(ctrl: Controller, link) -> None:
         elif cmd in SHORT or cmd in SHORT.values():
             ctrl.on_detect(SHORT.get(cmd, cmd), 0.99)
         elif cmd:
-            print("unknown, use: smoke, baby, door, kettle, ok, q")
+            print("unknown, use: smoke, glass, baby, siren, door, phone, kettle, ok, q")
         ctrl.tick()
 
 
