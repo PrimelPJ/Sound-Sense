@@ -37,4 +37,4 @@ when, how long with no response), so it always sends and never invents anything.
 
 ## How the listener talks to this
 
-When it hears something: `POST /api/events` with `{"sound": "smoke alarm", "confidence": 
+When it hears something: `POST /api/events` with `{"sound": "smoke alarm", "confidence": }
