@@ -37,12 +37,14 @@ const uint8_t BRIGHTNESS = 60;  // keep low so the Uno's 5V pin can power the st
 
 const unsigned long DOOR_TIMEOUT = 10000;    // heads up sounds turn off on their own
 const unsigned long KETTLE_TIMEOUT = 15000;
+const unsigned long PHONE_TIMEOUT = 15000;
+const unsigned long SIREN_TIMEOUT = 20000;
 
 #if USE_STRIP
 Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
-enum Mode { NONE = 0, KETTLE = 1, DOOR = 2, BABY = 3, SMOKE = 4 };  // higher = more important
+enum Mode { NONE = 0, KETTLE = 1, PHONE = 2, DOOR = 3, SIREN = 4, BABY = 5, GLASS = 6, SMOKE = 7 };  // higher = more important
 Mode mode = NONE;
 unsigned long modeStart = 0;
 
@@ -93,6 +95,12 @@ void runPattern() {
       setMotor((t % 1000) < 600);
       break;
     }
+        case GLASS: {  // white fast strobe, quick buzzes
+      bool on = (t % 200) < 100;
+      setColor(on ? 255 : 0, on ? 255 : 0, on ? 255 : 0);
+      setMotor((t % 800) < 400);
+      break;
+    }
     case BABY: {  // purple slow pulse, short buzzes
       unsigned long p = t % 1600;
       uint8_t level = p < 800 ? p * 255 / 800 : (1600 - p) * 255 / 800;
@@ -106,6 +114,21 @@ void runPattern() {
       setColor(0, 0, on ? 255 : 0);
       setMotor(p < 150 || (p >= 400 && p < 550));
       if (t > DOOR_TIMEOUT) setMode(NONE);
+      break;
+    }
+        case SIREN: {  // red and blue swapping, like an emergency vehicle
+      bool red = (t % 800) < 400;
+      setColor(red ? 255 : 0, 0, red ? 0 : 255);
+      setMotor(t < 300);
+      if (t > SIREN_TIMEOUT) setMode(NONE);
+      break;
+    }
+    case PHONE: {  // green ring-ring, two taps
+      unsigned long p = t % 3000;
+      bool on = p < 400 || (p >= 600 && p < 1000);
+      setColor(0, on ? 255 : 0, 0);
+      setMotor(on);
+      if (t > PHONE_TIMEOUT) setMode(NONE);
       break;
     }
     case KETTLE: {  // amber steady, one tap at the start
@@ -122,16 +145,20 @@ void runPattern() {
 // ---------- serial commands ----------
 
 Mode modeFor(const char *sound) {
-  if (strcmp(sound, "smoke_alarm") == 0) return SMOKE;
+  if (strcmp(sound, "smoke_alarm") == 0) return SMOKE; 
+  if (strcmp(sound, "glass_break") == 0) return GLASS;
   if (strcmp(sound, "baby_cry") == 0) return BABY;
+  if (strcmp(sound, "siren") == 0) return SIREN;
   if (strcmp(sound, "doorbell") == 0) return DOOR;
+  if (strcmp(sound, "phone") == 0) return PHONE;
   if (strcmp(sound, "kettle") == 0) return KETTLE;
   return NONE;
 }
 
+
 void playTest() {
-  Mode order[] = {SMOKE, BABY, DOOR, KETTLE};
-  for (int i = 0; i < 4; i++) {
+  Mode order[] = {SMOKE, GLASS, BABY, SIREN, DOOR, PHONE, KETTLE};
+  for (int i = 0; i < 7; i++) {
     setMode(order[i]);
     unsigned long start = millis();
     while (millis() - start < 2000) runPattern();
