@@ -18,6 +18,9 @@ URGENT_SOUNDS = {"smoke alarm", "fire alarm", "carbon monoxide alarm", "glass br
                  "help request"}
 # Set AUTO_ESCALATE=0 if the listener should decide when to text instead
 AUTO_ESCALATE = os.environ.get("AUTO_ESCALATE", "1") == "1"
+# After a text goes out, the same sound within this many seconds counts as the same alert
+# (an alarm can keep beeping for minutes, and we don't want to text people again and again)
+REPEAT_WINDOW_SECONDS = int(os.environ.get("REPEAT_WINDOW", "300"))
 # The person's name used in the texts
 HOME_NAME = os.environ.get("HOME_NAME", "Maria")
 # Where backup contacts are saved so they survive a restart
@@ -150,7 +153,10 @@ def create_event():
 
     with lock:  # lock the list while we change it
         # Same sound still waiting? Don't make a duplicate (an alarm beeps for minutes)
-        open_alert = next((e for e in events if e["status"] == "alerting" and e["sound"] == sound), None)
+        open_alert = next((e for e in events if e["sound"] == sound and (
+            e["status"] == "alerting" or
+            (e["status"] == "escalated" and e["escalated_at"] and
+             time.time() - datetime.fromisoformat(e["escalated_at"]).timestamp() < REPEAT_WINDOW_SECONDS))), None)
         if open_alert:
             open_alert["confidence"] = max(open_alert["confidence"], confidence)
             open_alert["repeats"] += 1
