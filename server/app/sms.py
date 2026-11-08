@@ -1,4 +1,8 @@
-"""Sends SMS messages through Twilio."""
+"""Sends SMS messages through Twilio.
+
+If the Twilio settings are not in server/.env, the text is only printed, so the
+whole system can still be tested without an SMS account.
+"""
 
 import logging
 import os
@@ -9,7 +13,7 @@ log = logging.getLogger("soundsense.sms")
 
 
 def send_sms(to: str, body: str) -> dict:
-    """Send an SMS using Twilio's predefined trial Event Notifications template."""
+    """Send one text. Return {"ok": True/False, "note": "..."}. Must not raise."""
 
     try:
         account_sid = os.getenv("TWILIO_ACCOUNT_SID")
@@ -18,10 +22,8 @@ def send_sms(to: str, body: str) -> dict:
         from_number = os.getenv("TWILIO_PHONE_NUMBER")
 
         if not all([account_sid, api_key, api_secret, from_number]):
-            return {
-                "ok": False,
-                "note": "Twilio credentials are missing.",
-            }
+            log.warning("SMS (not really sent) to %s: %s", to, body)
+            return {"ok": True, "note": "printed only, Twilio settings not set"}
 
         client = Client(
             api_key,
@@ -30,7 +32,7 @@ def send_sms(to: str, body: str) -> dict:
         )
 
         message = client.messages.create(
-            body="sms_event_notifications",
+            body=body,
             from_=from_number,
             to=to,
         )
@@ -45,7 +47,7 @@ def send_sms(to: str, body: str) -> dict:
         return {
             "ok": True,
             "note": (
-                f"Twilio accepted Event Notifications template. "
+                f"Twilio accepted the SMS. "
                 f"SID: {message.sid}, status: {message.status}"
             ),
         }
