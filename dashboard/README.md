@@ -37,4 +37,12 @@ when, how long with no response), so it always sends and never invents anything.
 
 ## How the listener talks to this
 
-When it hears something: `POST /api/events` with `{"sound": "smoke alarm", "confidence": }
+When it hears something: `POST /api/events` with `{"sound": "smoke alarm", "confidence": 0.94}`.
+The same sound again while an alert is open counts as a repeat, not a new alert.
+
+| Listener does | Request |
+|---|---|
+| Hears a sound | `POST /api/events` with `{"sound": "smoke alarm", "confidence": 0.94}` |
+| "I'm OK" button pressed | `POST /api/events/<id>/ack` |
+| "Get help" button pressed | `POST /api/events/<id>/escalate` with `{"by": "button"}` |
+| Checks if "I'm OK" was pressed on the dashboard | `GET /api/events/<id>` |
