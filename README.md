@@ -1,7 +1,8 @@
 # SoundSense
 
 SoundSense helps Deaf and hard of hearing people know what is happening at home.
-It hears a smoke alarm, doorbell, kettle or baby crying and turns it into a
+It hears a smoke alarm, glass breaking, a baby crying, an emergency siren, the doorbell,
+a phone ringing or a kettle and turns it into a 
 flashing light, a vibration and a live alert on the dashboard. If a serious
 alarm keeps going and nobody presses "I'm OK", it texts family, then a
 neighbour, then the building.
@@ -121,7 +122,7 @@ Useful options:
 | `python listener.py --threshold smoke_alarm=0.4` | Raise a threshold if a noisy room causes false alerts |
 | `python listener.py --list-mics` then `--mic 2` | Pick a different microphone |
 | `python listener.py --no-arduino` | Run without the board |
-| `python listener.py --simulate` | Type `smoke`, `baby`, `door`, `kettle`, `ok`. Demo backup if the room is too loud |
+| `python listener.py --simulate` | Type `smoke`, `glass`, `baby`, `siren`, `door`, `phone`, `kettle`, `ok`.|Demo backup if the room is too loud |
 | `--api https://your-server` | Point at a deployed API |
 | `--backend soundsense` | Use the backup `server/` (port 8000) instead of the dashboard API |
 
@@ -135,7 +136,7 @@ Everyone builds against these.
 {"device_id": "home-01", "sound": "smoke_alarm", "confidence": 0.91, "ts": "2026-11-07T14:02:11Z"}
 ```
 
-`sound` is one of `smoke_alarm`, `baby_cry`, `doorbell`, `kettle`.
+`sound` is one of `smoke_alarm`, `glass_break`, `baby_cry`, `siren`, `doorbell`, `phone`, `kettle`.
 
 **Endpoints**
 
@@ -162,7 +163,7 @@ Everyone builds against these.
 }
 ```
 
-`status` is one of: `info` (doorbell, kettle: heads up only), `active` (waiting for "I'm OK"),
+`status` is one of: `info` (doorbell, kettle: heads up only),  `active` (waiting for "I'm OK"),
 `escalating` (texts have gone out), `unanswered` (everyone was texted), `acked`.
 
 **Live messages** on `/live` (JSON, one per change)
@@ -187,9 +188,12 @@ Everyone builds against these.
 
 | Sound | Light | Vibration | Texts people? |
 | --- | --- | --- | --- |
-| Smoke alarm | Red, fast flash | Long pulses | Yes, after 60 s |
-| Baby crying | Purple, slow pulse | Short pulses | Yes, after 3 min |
-| Doorbell or knock | Blue, two flashes | Two taps | No, turns off after 10 s |
+| Smoke alarm | Red, fast flash | Long pulses | Yes |
+| Glass breaking (shatter, smash) | White, fast strobe | Quick buzzes | Yes |
+| Baby crying | Purple, slow pulse | Short pulses | Yes |
+| Emergency siren (police, ambulance, fire truck) | Red and blue swapping | One tap | No, turns off after 20 s |
+| Doorbell or chime | Blue, two flashes | Two taps | No, turns off after 10 s |
+| Phone ringing | Green, ring-ring | Two taps | No, turns off after 15 s |
 | Kettle or whistle | Amber, steady | One tap | No, turns off after 15 s |
 
 A more serious alert always wins: a doorbell never hides a smoke alarm.
