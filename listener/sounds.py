@@ -1,6 +1,6 @@
 """Which YAMNet (AudioSet) classes count as each SoundSense sound.
 
-YAMNet knows 521 sounds. We only care about 4, so each of ours is a group of
+YAMNet knows 521 sounds. We only care about 7, so each of ours is a group of
 AudioSet class names. A sound's score is the highest score in its group.
 
 If a name here is not in the model's class list, the listener prints a warning
@@ -15,7 +15,7 @@ SOUND_CLASSES = {
               "Ambulance (siren)", "Fire engine, fire truck (siren)"],
     "doorbell": ["Doorbell", "Ding-dong", "Ding", "Chime"],
     "phone": ["Telephone", "Telephone bell ringing", "Ringtone"],
-    "kettle": ["Kettle whistle", "Whistle", "Steam whistle", "Boiling"],
+    "kettle": ["Whistle", "Steam whistle", "Boiling"],
 }
 
 DEFAULT_THRESHOLDS = {
