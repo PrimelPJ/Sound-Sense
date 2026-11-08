@@ -72,14 +72,17 @@ def compose_alert_message(event, home_name, wait_seconds):
 def send_sms(to, body, written_by=None):
     sid = os.environ.get("TWILIO_ACCOUNT_SID")
     token = os.environ.get("TWILIO_AUTH_TOKEN")
-    sender = os.environ.get("TWILIO_FROM")
+    api_key = os.environ.get("TWILIO_API_KEY")        # an API key and secret work instead of the token
+    api_secret = os.environ.get("TWILIO_API_SECRET")
+    sender = os.environ.get("TWILIO_FROM") or os.environ.get("TWILIO_PHONE_NUMBER")
     record = {"to": to, "body": body, "at": datetime.now().isoformat(timespec="seconds"),
               "written_by": written_by}
 
-    if sid and token and sender:
+    if sid and sender and (token or (api_key and api_secret)):
         try:
             from twilio.rest import Client  # pip install twilio
-            msg = Client(sid, token).messages.create(to=to, from_=sender, body=body)
+            client = Client(api_key, api_secret, sid) if api_key and api_secret else Client(sid, token)
+            msg = client.messages.create(to=to, from_=sender, body=body)
             record.update(mode="twilio", ok=True, sid=msg.sid)
         except Exception as exc:  # keep the demo alive even if a text fails
             record.update(mode="twilio", ok=False, error=str(exc))

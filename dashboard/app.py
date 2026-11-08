@@ -124,7 +124,8 @@ def dashboard():
 @app.get("/api/health")
 def health():
     return jsonify(ok=True, escalate_after=ESCALATE_AFTER_SECONDS, auto_escalate=AUTO_ESCALATE,
-                   real_sms=bool(os.environ.get("TWILIO_ACCOUNT_SID")))
+                   real_sms=bool(os.environ.get("TWILIO_ACCOUNT_SID") and
+                                 (os.environ.get("TWILIO_FROM") or os.environ.get("TWILIO_PHONE_NUMBER"))))
 
 
 # Shows the list of alerts (the dashboard and the listener read this)
