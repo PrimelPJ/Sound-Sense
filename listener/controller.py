@@ -106,7 +106,7 @@ class Controller:
             except Exception:
                 event = None
             if event and event["status"] == "acked":
-                log.info("event %s marked OK by %s", event_id, event.get("acked_by"))
+                log.info("event %s marked OK by %s", event_id, event.get("acked_by") or "the dashboard")
                 del self.active[event_id]
                 self._reset(sound)
                 cleared = True
