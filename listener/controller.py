@@ -6,6 +6,8 @@
   which stops escalation, and the Arduino clears.
 - "I'm OK" pressed on the dashboard -> we notice by checking the API every couple
   of seconds and clear the Arduino too.
+- "Get help" button on the Arduino -> every open alert is texted to backup contacts
+  right away. With no alert going, a "help request" is made and texted instead.
 """
 
 import logging
@@ -55,6 +57,31 @@ class Controller:
         self.active.clear()
         self.link.send("CLEAR")
 
+    def on_escalate(self) -> None:
+        log.warning("GET HELP pressed on the device")
+        sent = False
+        for event_id in list(self.active):
+            try:
+                sent = self.api.escalate(event_id) is not None or sent
+            except Exception as exc:
+                log.error("could not escalate event %s: %s", event_id, exc)
+        if sent:
+            return
+        # Nothing open (or it could not be texted): make a help request and text it now.
+        try:
+            event = self.api.post_event(self.device_id, "help", 1.0)
+        except Exception as exc:
+            log.error("could not send help request: %s", exc)
+            event = None
+        if event is None:
+            log.warning("API unreachable, help shown locally only")
+            return
+        self.active[event["id"]] = "help"
+        try:
+            self.api.escalate(event["id"])
+        except Exception as exc:
+            log.error("could not escalate help request: %s", exc)
+
     # ---- loop ------------------------------------------------------------
 
     def tick(self) -> None:
@@ -62,6 +89,8 @@ class Controller:
         while (line := self.link.read()) is not None:
             if line == "ACK":
                 self.on_button()
+            elif line == "ESCALATE":
+                self.on_escalate()
             elif line == "READY":
                 log.info("Arduino restarted")
                 self._show_top()

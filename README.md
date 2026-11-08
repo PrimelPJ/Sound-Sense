@@ -30,6 +30,7 @@ laptop mic -> YAMNet sound model -> listener ---USB---> Arduino (light, vibratio
 5. For a smoke alarm (60 s) or a baby crying (3 min), a timer starts. No "I'm OK"
    in time means texts go out, one group at a time, 60 s apart.
 6. "I'm OK" on the button or the dashboard stops everything.
+7. The "Get help" button texts backup contacts straight away, with or without an alert going.
 
 In a real product the laptop would be a small $10 to $20 Wi-Fi board (like an ESP32).
 
@@ -78,28 +79,28 @@ from the Library Manager.
 | --- | --- |
 | RGB LED red, green, blue (each through 220 ohm) | 3, 5, 6 |
 | RGB LED longest leg | GND |
-| Motor, through a PN2222 transistor (1k ohm on the base) and a 1N4007 diode across it | 9 |
+| Buzzer, long leg (short leg to GND) | 9 |
 | "I'm OK" button (other leg to GND) | 2 |
+| "Get help" button (other leg to GND) | 4 |
 
 **Breadboard holes** (letter = column, number = row, as printed on the board)
 
 | Part | Holes |
 | --- | --- |
 | Arduino 5V and GND | rail next to column a: 5V in the red-line row, GND in the blue-line row |
-| Arduino second GND | rail next to column j, blue-line row |
-| Button | e1, e3, f1, f3 (across the middle gap) |
+| "I'm OK" button | e1, e3, f1, f3 (across the middle gap) |
 | Pin 2 / button ground | a1 / a3 to the blue-line rail by column a |
-| RGB LED (red, longest, green, blue) | h10, h11, h12, h13 |
-| LED ground | j11 to the blue-line rail by column j |
-| 220 ohm resistors | i10 to i6, f12 to e12, i13 to i17 |
-| Pin 3 / pin 5 / pin 6 | j6 / a12 / j17 |
-| PN2222 (E, B, C) | d20, d21, d22 |
-| 1k ohm | b21 to b25 |
-| Pin 9 | a25 |
-| Emitter to ground | a20 to the blue-line rail by column a |
-| Motor leads | e22 and e28 |
-| 1N4007 diode (stripe at row 28) | c22 to c28 |
-| Motor power | b28 to the red-line rail by column a |
+| "Get help" button | e11, e13, f11, f13 (across the middle gap) |
+| Pin 4 / button ground | a11 / a13 to the blue-line rail by column a |
+| RGB LED (red, longest, green, blue) | d20, d21, d22, d23 |
+| LED ground | b21 to the blue-line rail by column a |
+| 220 ohm resistors (across the middle gap) | e20 to f20, e22 to f22, e23 to f23 |
+| Pin 3 / pin 5 / pin 6 | j20 / j22 / j23 |
+| Buzzer (long leg, short leg) | e25, e28 |
+| Pin 9 / buzzer ground | a25 / a28 to the blue-line rail by column a |
+
+**Button test:** `arduino/button_test/button_test.ino` prints which pin each button is on
+(2, 4 or 11) and flashes the light, so you can check the wiring before uploading the main sketch.
 
 ### 3. Listener
 
@@ -122,7 +123,7 @@ Useful options:
 | `python listener.py --threshold smoke_alarm=0.4` | Raise a threshold if a noisy room causes false alerts |
 | `python listener.py --list-mics` then `--mic 2` | Pick a different microphone |
 | `python listener.py --no-arduino` | Run without the board |
-| `python listener.py --simulate` | Type `smoke`, `glass`, `baby`, `siren`, `door`, `phone`, `kettle`, `ok`. Demo backup if the room is too loud |
+| `python listener.py --simulate` | Type `smoke`, `glass`, `baby`, `siren`, `door`, `phone`, `kettle`, `ok`, `help`. Demo backup if the room is too loud |
 | `--api https://your-server` | Point at a deployed API |
 | `--backend soundsense` | Use the backup `server/` (port 8000) instead of the dashboard API |
 
@@ -181,13 +182,14 @@ Everyone builds against these.
 
 | Direction | Message |
 | --- | --- |
-| Laptop to Arduino | `ALERT <sound>` (any sound above), `CLEAR`, `PING`, `TEST` | 
-| Arduino to laptop | `READY` on boot, `ACK` when "I'm OK" is pressed, `PONG` |
+| Laptop to Arduino | `ALERT <sound>` (any sound above, or `help`), `CLEAR`, `PING`, `TEST` |
+| Arduino to laptop | `READY` on boot, `ACK` when "I'm OK" is pressed, `ESCALATE` when "Get help" is pressed, `PONG` |
 
 **Alert patterns**
 
-| Sound | Light | Vibration | Texts people? |
+| Sound | Light | Buzzer | Texts people? |
 | --- | --- | --- | --- |
+| "Get help" button | Orange, SOS flashes | SOS beeps | Yes, straight away |
 | Smoke alarm | Red, fast flash | Long pulses | Yes |
 | Glass breaking (shatter, smash) | White, fast strobe | Quick buzzes | Yes |
 | Baby crying | Purple, slow pulse | Short pulses | Yes |

@@ -1,10 +1,11 @@
 """USB serial link to the Arduino Uno.
 
-Laptop -> Arduino:   ALERT <sound>   show that sound's light and vibration
+Laptop -> Arduino:   ALERT <sound>   show that sound's light and buzzer (sound can be "help")
                      CLEAR           turn everything off
                      PING            Arduino replies PONG
 Arduino -> laptop:   READY           sent once after boot
                      ACK             the "I'm OK" button was pressed
+                     ESCALATE        the "Get help" button was pressed
                      PONG
 
 Every message is one line ending in a newline. Baud rate is 115200.
@@ -107,6 +108,9 @@ class NoArduino:
 
     def press_button(self) -> None:
         self.lines.put("ACK")
+
+    def press_help(self) -> None:
+        self.lines.put("ESCALATE")
 
     def close(self) -> None:
         pass

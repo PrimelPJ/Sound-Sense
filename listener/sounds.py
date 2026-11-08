@@ -29,8 +29,9 @@ DEFAULT_THRESHOLDS = {
 }
 
 # Higher number wins when two sounds are going at once.
-PRIORITY = {"smoke_alarm": 7, "glass_break": 6, "baby_cry": 5, "siren": 4,
+# "help" is not a sound: it is sent when the "Get help" button is pressed.
+PRIORITY = {"help": 8, "smoke_alarm": 7, "glass_break": 6, "baby_cry": 5, "siren": 4,
             "doorbell": 3, "phone": 2, "kettle": 1}
 
 # Sounds that start the escalation timer on the server. The others are just a heads up.
-ESCALATING = {"smoke_alarm", "glass_break", "baby_cry"}
+ESCALATING = {"help", "smoke_alarm", "glass_break", "baby_cry"}

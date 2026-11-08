@@ -14,7 +14,8 @@ app = Flask(__name__)
 # How many seconds someone has to press "I'm OK" (60 unless we change it)
 ESCALATE_AFTER_SECONDS = int(os.environ.get("ESCALATE_AFTER", "60"))
 # Sounds that are dangerous (these get texted if nobody responds)
-URGENT_SOUNDS = {"smoke alarm", "fire alarm", "carbon monoxide alarm", "glass breaking", "baby crying"}
+URGENT_SOUNDS = {"smoke alarm", "fire alarm", "carbon monoxide alarm", "glass breaking", "baby crying",
+                 "help request"}
 # Set AUTO_ESCALATE=0 if the listener should decide when to text instead
 AUTO_ESCALATE = os.environ.get("AUTO_ESCALATE", "1") == "1"
 # The person's name used in the texts
@@ -201,13 +202,16 @@ def acknowledge(event_id):
             event["acknowledged_at"] = now_iso()     # remember when
         return jsonify(event)
 
-# Texts the backup contacts right away (used by the "Skip timer" demo button)
+# Texts the backup contacts right away ("Skip timer" demo button, or the Arduino "Get help" button)
 @app.post("/api/events/<event_id>/escalate")
 def escalate_now(event_id):
+    data = request.get_json(silent=True) or {}
     with lock:
         event = find_event(event_id)
         if not event:
             return jsonify(error="No matching alert"), 404
+        if data.get("by") == "button" and event["status"] == "alerting":
+            event["escalated_by"] = "button"   # the text says they pressed "Get help"
         escalate_in_background(event)
         return jsonify(event)
 # Shows all backup contacts 

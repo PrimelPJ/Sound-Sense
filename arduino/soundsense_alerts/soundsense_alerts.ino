@@ -1,24 +1,23 @@
 // SoundSense alert device (Arduino Uno)
 //
-// Shows each sound as a light and vibration pattern, and sends "ACK" when the
-// "I'm OK" button is pressed.
+// Shows each sound as a light and buzzer pattern. Two buttons:
+//   "I'm OK" button     -> turns the alert off and sends "ACK"
+//   "Get help" button   -> texts backup contacts now and sends "ESCALATE"
 //
 // Wiring:
-//   LED strip data (WS2812B)  -> pin 6 through a 330 ohm resistor, strip 5V -> 5V, GND -> GND
-//   Vibration motor           -> pin 9 through a 1k resistor to a 2N2222 base,
-//                                motor between 5V and collector, emitter to GND,
-//                                1N4007 diode across the motor (stripe to 5V)
-//   "I'm OK" button           -> pin 2 and GND (uses the built-in pull-up)
+//   RGB LED (common cathode, longest leg to GND), each colour through 220 ohm:
+//     red -> pin 3, green -> pin 5, blue -> pin 6
+//   Buzzer (or a vibration motor through a transistor) -> pin 9, other leg to GND
+//   "I'm OK" button    -> pin 2 and GND (uses the built-in pull-up)
+//   "Get help" button  -> pin 4 and GND (uses the built-in pull-up)
 //
-// No LED strip? Set USE_STRIP to 0 and use the kit's RGB LED instead (common cathode,
-// longest leg to GND): red leg -> 220 ohm -> pin 3, green -> 220 ohm -> pin 5,
-// blue -> 220 ohm -> pin 6.
-// Library (only for the strip): Arduino IDE > Library Manager > "Adafruit NeoPixel".
+// Optional LED strip (WS2812B) instead of the RGB LED: set USE_STRIP to 1, data to pin 6
+// through 330 ohm, and install "Adafruit NeoPixel" from the Library Manager.
 //
 // Serial, 115200 baud, one command per line:
-//   ALERT smoke_alarm | ALERT baby_cry | ALERT doorbell | ALERT kettle
+//   ALERT smoke_alarm | glass_break | baby_cry | siren | doorbell | phone | kettle | help
 //   CLEAR, PING (replies PONG), TEST (plays every pattern once)
-// Sends: READY on boot, ACK when the button is pressed.
+// Sends: READY on boot, ACK ("I'm OK" pressed), ESCALATE ("Get help" pressed).
 
 #define USE_STRIP 0  // 0 = kit RGB LED, 1 = WS2812B LED strip
 
@@ -31,7 +30,8 @@ const int RED_PIN = 3;    // RGB LED legs (all PWM pins)
 const int GREEN_PIN = 5;
 const int BLUE_PIN = 6;
 const int MOTOR_PIN = 9;
-const int BUTTON_PIN = 2;
+const int BUTTON_PIN = 2;       // "I'm OK"
+const int HELP_BUTTON_PIN = 4;  // "Get help" (change to 11 if the wire is in pin 11)
 const int NUM_LEDS = 8;
 const uint8_t BRIGHTNESS = 60;  // keep low so the Uno's 5V pin can power the strip
 
@@ -44,16 +44,28 @@ const unsigned long SIREN_TIMEOUT = 20000;
 Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
-enum Mode { NONE = 0, KETTLE = 1, PHONE = 2, DOOR = 3, SIREN = 4, BABY = 5, GLASS = 6, SMOKE = 7 };  // higher = more important
+enum Mode { NONE = 0, KETTLE = 1, PHONE = 2, DOOR = 3, SIREN = 4, BABY = 5, GLASS = 6, SMOKE = 7, HELP = 8 };  // higher = more important
 Mode mode = NONE;
 unsigned long modeStart = 0;
 
 char line[40];
 uint8_t lineLen = 0;
 
-int lastReading = HIGH;
-int buttonState = HIGH;
-unsigned long lastChange = 0;
+// One of these for each button, so each one is debounced on its own.
+struct Button {
+  int pin;
+  int lastReading;
+  int state;
+  unsigned long lastChange;
+};
+Button okButton = {BUTTON_PIN, HIGH, HIGH, 0};
+Button helpButton = {HELP_BUTTON_PIN, HIGH, HIGH, 0};
+
+// "Get help" pattern: SOS in Morse (on/off times in ms, starting with "on").
+const unsigned int SOS[] = {200, 200, 200, 200, 200, 600,   // S
+                            600, 200, 600, 200, 600, 600,   // O
+                            200, 200, 200, 200, 200, 1400}; // S
+const int SOS_STEPS = sizeof(SOS) / sizeof(SOS[0]);
 
 // ---------- output helpers ----------
 
@@ -85,10 +97,27 @@ void setMode(Mode m) {
 
 // ---------- patterns (non-blocking, run every loop) ----------
 
+bool sosOn(unsigned long t) {
+  unsigned long total = 0;
+  for (int i = 0; i < SOS_STEPS; i++) total += SOS[i];
+  unsigned long p = t % total;
+  for (int i = 0; i < SOS_STEPS; i++) {
+    if (p < SOS[i]) return i % 2 == 0;
+    p -= SOS[i];
+  }
+  return false;
+}
+
 void runPattern() {
   unsigned long t = millis() - modeStart;
 
   switch (mode) {
+    case HELP: {  // orange SOS flashes with matching beeps (orange = help is on the way)
+      bool on = sosOn(t);
+      setColor(on ? 255 : 0, on ? 60 : 0, 0);
+      setMotor(on);
+      break;
+    }
     case SMOKE: {  // red fast flash, long buzzes
       bool on = (t % 300) < 150;
       setColor(on ? 255 : 0, 0, 0);
@@ -152,13 +181,14 @@ Mode modeFor(const char *sound) {
   if (strcmp(sound, "doorbell") == 0) return DOOR;
   if (strcmp(sound, "phone") == 0) return PHONE;
   if (strcmp(sound, "kettle") == 0) return KETTLE;
+  if (strcmp(sound, "help") == 0) return HELP;
   return NONE;
 }
 
 
 void playTest() {
-  Mode order[] = {SMOKE, GLASS, BABY, SIREN, DOOR, PHONE, KETTLE};
-  for (int i = 0; i < 7; i++) {
+  Mode order[] = {SMOKE, GLASS, BABY, SIREN, DOOR, PHONE, KETTLE, HELP};
+  for (int i = 0; i < 8; i++) {
     setMode(order[i]);
     unsigned long start = millis();
     while (millis() - start < 2000) runPattern();
@@ -194,19 +224,30 @@ void readSerial() {
   }
 }
 
-// ---------- button ----------
+// ---------- buttons ----------
 
-void readButton() {
-  int reading = digitalRead(BUTTON_PIN);
-  if (reading != lastReading) lastChange = millis();
-  if (millis() - lastChange > 40 && reading != buttonState) {
-    buttonState = reading;
-    if (buttonState == LOW) {  // pressed
-      Serial.println("ACK");
-      setMode(NONE);
-    }
+// True once each time the button is pressed (after 40 ms of debounce).
+bool pressed(Button &b) {
+  int reading = digitalRead(b.pin);
+  bool justPressed = false;
+  if (reading != b.lastReading) b.lastChange = millis();
+  if (millis() - b.lastChange > 40 && reading != b.state) {
+    b.state = reading;
+    justPressed = (b.state == LOW);
   }
-  lastReading = reading;
+  b.lastReading = reading;
+  return justPressed;
+}
+
+void readButtons() {
+  if (pressed(okButton)) {  // "I'm OK": everything off
+    Serial.println("ACK");
+    setMode(NONE);
+  }
+  if (pressed(helpButton)) {  // "Get help": text people now
+    Serial.println("ESCALATE");
+    setMode(HELP);
+  }
 }
 
 // ---------- main ----------
@@ -214,6 +255,7 @@ void readButton() {
 void setup() {
   pinMode(MOTOR_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(HELP_BUTTON_PIN, INPUT_PULLUP);
 #if USE_STRIP
   strip.begin();
   strip.setBrightness(BRIGHTNESS);
@@ -235,6 +277,6 @@ void setup() {
 
 void loop() {
   readSerial();
-  readButton();
+  readButtons();
   runPattern();
 }

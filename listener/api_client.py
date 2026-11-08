@@ -55,6 +55,11 @@ class Api:
     def get_event(self, event_id: int) -> dict | None:
         return self._call("GET", f"/events/{event_id}")
 
+    def escalate(self, event_id) -> dict | None:
+        # The backup server texts on its own timer and has no "text now" route yet.
+        log.warning("escalate now is not supported by this server, its timer will text people")
+        return None
+
 
 # Names Alisha's API expects. Change the right-hand side if hers differ.
 ALISHA_NAMES = {
@@ -65,6 +70,7 @@ ALISHA_NAMES = {
     "glass_break": "glass breaking",
     "phone": "phone ringing",
     "siren": "emergency siren",
+    "help": "help request",
 }
 
 
@@ -77,6 +83,7 @@ class AlishaApi(Api):
 
     POST /api/events            {"sound": "smoke alarm", "confidence": 0.94}
     POST /api/events/{id}/ack   when the button is pressed ("latest" if we have no id)
+    POST /api/events/{id}/escalate   when the "Get help" button is pressed
     GET  /api/events/{id}       to notice "I'm OK" pressed on the dashboard
     """
 
@@ -108,4 +115,9 @@ class AlishaApi(Api):
         if event_id == "latest":
             return None
         resp = self._call("GET", f"/api/events/{event_id}")
+        return self._convert(resp) if resp is not None else None
+
+    def escalate(self, event_id) -> dict | None:
+        # Text the backup contacts now instead of waiting for the timer.
+        resp = self._call("POST", f"/api/events/{event_id or 'latest'}/escalate", json={"by": "button"})
         return self._convert(resp) if resp is not None else None

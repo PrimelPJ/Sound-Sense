@@ -73,7 +73,7 @@ def connect_arduino(args):
 
 
 def run_simulate(ctrl: Controller, link) -> None:
-    print("Simulate mode. Type: smoke, glass, baby, siren, door, phone, kettle, ok, q")
+    print("Simulate mode. Type: smoke, glass, baby, siren, door, phone, kettle, ok, help, q")
     commands: "queue.Queue[str]" = queue.Queue()
 
     def read_stdin():
@@ -92,10 +92,13 @@ def run_simulate(ctrl: Controller, link) -> None:
             return
         if cmd == "ok":
             ctrl.on_button()
+        elif cmd == "help":
+            link.send("ALERT help")
+            ctrl.on_escalate()
         elif cmd in SHORT or cmd in SHORT.values():
             ctrl.on_detect(SHORT.get(cmd, cmd), 0.99)
         elif cmd:
-            print("unknown, use: smoke, glass, baby, siren, door, phone, kettle, ok, q")
+            print("unknown, use: smoke, glass, baby, siren, door, phone, kettle, ok, help, q")
         ctrl.tick()
 
 

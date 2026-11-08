@@ -25,6 +25,7 @@ FRIENDLY_SOUND = {
     "doorbell": "doorbell",
     "phone ringing": "phone ringing",
     "kettle": "kettle whistling",
+    "help request": "help request",
 }
 
 # Extra advice added to urgent texts, so the contact knows what to do.
@@ -49,6 +50,12 @@ def _facts(event, home_name, wait_seconds):
 def template_message(event, home_name, wait_seconds):
     """Fixed wording. Always works and never invents anything."""
     f = _facts(event, home_name, wait_seconds)
+    if event["sound"] == "help request" or event.get("escalated_by") == "button":
+        when = datetime.fromisoformat(event.get("escalated_at") or event["detected_at"])
+        during = "" if event["sound"] == "help request" else f" during a {f['sound']}"
+        text = (f"SoundSense ALERT: {f['home_name']} pressed the help button{during} at "
+                f"{when.strftime('%I:%M %p').lstrip('0')}. Please check on them now.")
+        return f"{text} {f['advice']}".strip()
     if f["urgent"]:
         text = (f"SoundSense ALERT: {f['sound'].capitalize()} at {f['home_name']}'s home at {f['time']}, "
                 f"and no response in {f['wait']} seconds. Please check on them now.")

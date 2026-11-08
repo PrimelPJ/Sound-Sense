@@ -114,3 +114,39 @@ def test_api_down_still_alerts_locally():
     c = Controller(DownApi(), link, "home-01")
     assert c.on_detect("smoke_alarm", 0.9) is None
     assert link.sent == ["ALERT smoke_alarm"]
+
+
+def test_help_button_texts_open_alert_now():
+    class EscApi(FakeApi):
+        escalated = []
+
+        def escalate(self, event_id):
+            self.escalated.append(event_id)
+            self.events[event_id]["status"] = "escalating"
+            return dict(self.events[event_id])
+
+    api, link = EscApi(), RecordingLink()
+    c = Controller(api, link, "home-01")
+    c.on_detect("smoke_alarm", 0.9)
+    link.press_help()
+    c.tick()
+    assert api.escalated == [1] and len(api.events) == 1  # no extra help request
+
+
+def test_help_button_with_nothing_going_makes_help_request():
+    class EscApi(FakeApi):
+        escalated = []
+
+        def escalate(self, event_id):
+            self.escalated.append(event_id)
+            return dict(self.events[event_id])
+
+    api, link = EscApi(), RecordingLink()
+    c = Controller(api, link, "home-01")
+    link.press_help()
+    c.tick()
+    assert api.events[1]["sound"] == "help" and api.escalated == [1]
+    assert c.active == {1: "help"}
+    link.press_button()  # "I'm OK" clears it
+    c.tick()
+    assert c.active == {} and link.sent == ["CLEAR"]
