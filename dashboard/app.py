@@ -212,6 +212,13 @@ def escalate_now(event_id):
 def list_contacts():
     with lock:
         return jsonify(contacts=contacts)
+   # Clears the alerts and texts between demo runs (contacts are kept)
+@app.post("/api/reset")
+def reset():
+    with lock:
+        events.clear()
+        sent_messages.clear()
+    return jsonify(ok=True)
 
 
 # Adds a backup contact, like {"name": "Mom", "phone": "+15875550199", "relation": "Family"}
