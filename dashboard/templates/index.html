@@ -1,110 +1,234 @@
-
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SoundSense</title>
-
 <style>
   :root {
-    --bg: #f6f5f1;
-    --card: #ffffff;
-    --text: #1d1d1b;
-    --muted: #5f5e5a;
-    --line: #dcdad2;
-    --red: #b42318;
-    --red-bg: #fde8e6;
-    --amber: #8a4b00;
-    --amber-bg: #fdf0d5;
-    --green: #1f6f3a;
-    --green-bg: #e3f4e8;
-    --blue: #1d4ed8;
+    --bg: #f6f5f1; --card: #ffffff; --text: #1d1d1b; --muted: #5f5e5a; --line: #dcdad2;
+    --red: #b42318; --red-bg: #fde8e6; --amber: #8a4b00; --amber-bg: #fdf0d5;
+    --green: #1f6f3a; --green-bg: #e3f4e8; --blue: #1d4ed8;
   }
-
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #151514;
-      --card: #201f1d;
-      --text: #f1efe8;
-      --muted: #b4b2a9;
-      --line: #3a3936;
-      --red: #ff8a80;
-      --red-bg: #3b1714;
-      --amber: #ffc46b;
-      --amber-bg: #3a2a0c;
-      --green: #7ee2a0;
-      --green-bg: #11301c;
-      --blue: #8ab4ff;
-    }
+    :root { --bg: #151514; --card: #201f1d; --text: #f1efe8; --muted: #b4b2a9; --line: #3a3936;
+      --red: #ff8a80; --red-bg: #3b1714; --amber: #ffc46b; --amber-bg: #3a2a0c;
+      --green: #7ee2a0; --green-bg: #11301c; --blue: #8ab4ff; }
   }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg);
+    color: var(--text); font-size: 17px; line-height: 1.5; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--card); }
+  h1 { margin: 0; font-size: 22px; }
+  h2 { margin: 0 0 12px; font-size: 18px; }
+  .sub { color: var(--muted); font-size: 15px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
 
-  * {
-    box-sizing: border-box;
-  }
+  #status { border-radius: 16px; padding: 22px; border: 2px solid var(--line); background: var(--card); }
+  #status.calm { border-color: var(--green); background: var(--green-bg); }
+  #status.alert { border-color: var(--red); background: var(--red-bg); animation: pulse 1s infinite; }
+  #status.escalated { border-color: var(--amber); background: var(--amber-bg); }
+  @media (prefers-reduced-motion: reduce) { #status.alert { animation: none; } }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 8px transparent; outline: 6px solid var(--red); outline-offset: -2px; } }
+  .status-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .big { font-size: 30px; font-weight: 700; margin: 0; }
+  .countdown { font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 17px;
-    line-height: 1.5;
-  }
+  button { font: inherit; border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+    color: var(--text); padding: 10px 16px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .ok { background: var(--green); color: #fff; border: none; font-size: 22px; font-weight: 700; padding: 16px 28px; }
+  @media (prefers-color-scheme: dark) { .ok { color: #0b2414; } }
+  .demo { display: flex; flex-wrap: wrap; gap: 8px; }
 
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--line);
-    background: var(--card);
-  }
+  .table-wrap { overflow-x: auto; }
+  .card, .grid > * { min-width: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  @media (max-width: 520px) { th, td { padding: 8px 5px; font-size: 14px; } header { padding: 14px 16px; } }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .pill.alerting { background: var(--red-bg); color: var(--red); }
+  .pill.acknowledged { background: var(--green-bg); color: var(--green); }
+  .pill.escalated { background: var(--amber-bg); color: var(--amber); }
 
-  h1 {
-    margin: 0;
-    font-size: 22px;
-  }
-
-  h2 {
-    margin: 0 0 12px;
-    font-size: 18px;
-  }
-
-  .sub {
-    color: var(--muted);
-    font-size: 15px;
-  }
-
-  main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 20px 16px 48px;
-    display: grid;
-    gap: 18px;
-  }
-
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 18px;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 18px;
-  }
-
-  @media (max-width: 800px) {
-    .grid {
-      grid-template-columns: 1fr;
-    }
-  }
+  .contact { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    padding: 10px 0; border-bottom: 1px solid var(--line); }
+  form { display: grid; gap: 8px; margin-top: 12px; }
+  input { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); }
+  .error { color: var(--red); font-size: 14px; min-height: 1em; }
+  .msg { font-size: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .empty { color: var(--muted); font-size: 15px; }
 </style>
 </head>
 <body>
+<header>
+  <div>
+    <h1>SoundSense</h1>
+    <div class="sub">{{ home_name }}'s home · Sound alerts that make sure someone responds</div>
+  </div>
+  <div class="sub" id="clock"></div>
+</header>
+
+<main>
+  <section id="status" class="calm" aria-live="assertive">
+    <div class="status-row">
+      <div>
+        <p class="big" id="status-title">All quiet</p>
+        <div id="status-detail" class="sub">Listening for alarms, doorbells and more.</div>
+      </div>
+      <div id="status-action"></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Event log</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Time</th><th>Sound</th><th>Confidence</th><th>Status</th><th>Notified</th></tr></thead>
+        <tbody id="log"><tr><td colspan="5" class="empty">No events yet.</td></tr></tbody>
+      </table></div>
+    </section>
+
+    <div style="display:grid; gap:18px; align-content:start">
+      <section class="card">
+        <h2>Backup contacts</h2>
+        <div id="contacts"></div>
+        <form id="contact-form" novalidate>
+          <input id="c-name" placeholder="Name" aria-label="Contact name">
+          <input id="c-phone" placeholder="Phone, e.g. +15875550123" aria-label="Contact phone">
+          <input id="c-rel" placeholder="Relation (optional)" aria-label="Relation">
+          <div class="error" id="c-error"></div>
+          <button type="submit">Add contact</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Demo controls</h2>
+        <div class="demo">
+          <button data-sound="smoke alarm">Smoke alarm</button>
+          <button data-sound="doorbell">Doorbell</button>
+          <button data-sound="baby crying">Baby crying</button>
+          <button data-sound="knocking">Knocking</button>
+        </div>
+        <div class="demo" style="margin-top:10px">
+          <button id="skip-timer">Skip timer</button>
+          <button id="reset">Clear log</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Texts sent</h2>
+        <div id="messages"><div class="empty">None yet.</div></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const label = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const timeOf = (iso) => iso ? new Date(iso).toLocaleTimeString([], {hour: "numeric", minute: "2-digit", second: "2-digit"}) : "";
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {headers: {"Content-Type": "application/json"}, ...options});
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || "Request failed");
+  return body;
+}
+
+function renderStatus(events) {
+  const box = $("status");
+  const active = events.find((e) => e.status === "alerting");
+  const latest = events[0];
+  if (active) {
+    box.className = "alert";
+    $("status-title").textContent = `${label(active.sound)} detected`;
+    $("status-detail").textContent = `${Math.round(active.confidence * 100)}% sure · ${timeOf(active.detected_at)} · Backup contacts get a text when the timer runs out`;
+    $("status-action").innerHTML = `<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+      <span class="countdown" aria-label="Seconds left">${active.seconds_left}s</span>
+      <button class="ok" onclick="ack('${active.id}')">I'm OK</button></div>`;
+  } else if (latest && latest.status === "escalated" && Date.now() - new Date(latest.escalated_at) < 120000) {
+    box.className = "escalated";
+    const sending = !latest.notified.length;
+    const names = latest.notified.map((n) => n.name).join(", ");
+    $("status-title").textContent = sending ? "Texting backup contacts…" : "Help is on the way";
+    $("status-detail").textContent = sending ? `No response to the ${latest.sound}.`
+      : `No response to the ${latest.sound}. Texted: ${names}.`;
+    $("status-action").innerHTML = "";
+  } else {
+    box.className = "calm";
+    $("status-title").textContent = "All quiet";
+    $("status-detail").textContent = "Listening for alarms, doorbells and more.";
+    $("status-action").innerHTML = "";
+  }
+}
+
+function renderLog(events) {
+  if (!events.length) { $("log").innerHTML = '<tr><td colspan="5" class="empty">No events yet.</td></tr>'; return; }
+  $("log").innerHTML = events.map((e) => `<tr>
+    <td>${timeOf(e.detected_at)}</td>
+    <td>${esc(label(e.sound))}${e.urgent ? " ⚠" : ""}</td>
+    <td>${Math.round(e.confidence * 100)}%</td>
+    <td><span class="pill ${e.status}">${e.status === "alerting" ? "Waiting" : e.status === "acknowledged" ? "Responded" : "Escalated"}</span></td>
+    <td>${e.notified.length ? esc(e.notified.map((n) => n.name).join(", ")) : "—"}</td></tr>`).join("");
+}
+
+async function refresh() {
+  try {
+    const {events} = await api("/api/events");
+    renderStatus(events);
+    renderLog(events);
+    const {messages} = await api("/api/messages");
+    $("messages").innerHTML = messages.length ? messages.slice().reverse().map((m) =>
+      `<div class="msg"><strong>To ${esc(m.to)}</strong> · ${timeOf(m.at)}${m.mode === "mock" ? " · demo mode" : ""}${m.written_by === "ai" ? " · AI-written" : ""}${m.ok === false ? ' · <span style="color:var(--red)">failed to send</span>' : ""}<br>${esc(m.body)}</div>`).join("")
+      : '<div class="empty">None yet.</div>';
+  } catch (err) { console.error(err); }
+}
+
+async function loadContacts() {
+  const {contacts} = await api("/api/contacts");
+  $("contacts").innerHTML = contacts.length ? contacts.map((c) => `<div class="contact">
+    <div><strong>${esc(c.name)}</strong><div class="sub">${esc(c.phone)}${c.relation ? " · " + esc(c.relation) : ""}</div></div>
+    <button onclick="removeContact('${c.id}')" aria-label="Remove ${esc(c.name)}">Remove</button></div>`).join("")
+    : '<div class="empty">Add at least one person to text if nobody responds.</div>';
+}
+
+async function ack(id) { await api(`/api/events/${id}/ack`, {method: "POST"}); refresh(); }
+async function removeContact(id) { await api(`/api/contacts/${id}`, {method: "DELETE"}); loadContacts(); }
+
+$("contact-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const name = $("c-name").value.trim(), phone = $("c-phone").value.trim();
+  if (!name || !phone) { $("c-error").textContent = "Enter a name and a phone number first."; return; }
+  if (!/^\+?[0-9\s\-()]{7,}$/.test(phone)) { $("c-error").textContent = "That phone number doesn't look right."; return; }
+  try {
+    await api("/api/contacts", {method: "POST", body: JSON.stringify({name, phone, relation: $("c-rel").value})});
+    ev.target.reset(); loadContacts();
+  } catch (err) { $("c-error").textContent = err.message; }
+});
+["c-name", "c-phone"].forEach((id) => $(id).addEventListener("input", () => { $("c-error").textContent = ""; }));
+
+document.querySelectorAll("[data-sound]").forEach((b) => b.addEventListener("click", () =>
+  api("/api/events", {method: "POST", body: JSON.stringify({sound: b.dataset.sound, confidence: 0.94, source: "demo"})}).then(refresh)));
+
+$("skip-timer").addEventListener("click", async () => {
+  const {events} = await api("/api/events");
+  const active = events.find((e) => e.status === "alerting");
+  if (active) { await api(`/api/events/${active.id}/escalate`, {method: "POST"}); refresh(); }
+});
+$("reset").addEventListener("click", () => api("/api/reset", {method: "POST"}).then(refresh));
+
+setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString(); }, 1000);
+setInterval(refresh, 1000);
+refresh(); loadContacts();
+</script>
 </body>
-</html>
+</html> 
