@@ -38,11 +38,21 @@ def send_sms(to: str, body: str) -> dict:
             account_sid=account_sid,
         )
 
-        message = client.messages.create(
-            body=body,
-            from_=from_number,
-            to=to,
-        )
+        try:
+            message = client.messages.create(
+                body=body,
+                from_=from_number,
+                to=to,
+            )
+        except Exception as exc:
+            # Trial accounts may only send Twilio's predefined templates, so send that instead.
+            if "template" not in str(exc).lower():
+                raise
+            message = client.messages.create(
+                body=os.getenv("TWILIO_TRIAL_TEMPLATE", "sms_event_notifications"),
+                from_=from_number,
+                to=to,
+            )
 
         log.info(
             "Twilio accepted SMS to %s. SID: %s, status: %s",
