@@ -9,6 +9,8 @@ neighbour, then the building.
 
 Built at Hack the Change 2026.
 
+![SoundSense dashboard during a smoke alarm](docs/dashboard.png)
+
 ## How it works
 
 ```
