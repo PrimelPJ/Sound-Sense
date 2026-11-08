@@ -5,7 +5,7 @@ import uuid        # makes a random ID for each alert
 from datetime import datetime   # gives us the date and time as text
 import json        # saves contacts to a file
 
-from flask import Flask, jsonify, request   # request = the data someone sent us
+from flask import Flask, jsonify, render_template, request   # render_template = shows an HTML page
 from sms import compose_alert_message, send_sms, sent_messages   # writes and sends the texts
 
 # Create the web server
@@ -99,10 +99,18 @@ def escalation_loop():
                     escalate_in_background(e)
 
 
-# Home page: just shows the server is on
+
+# The dashboard page (templates/index.html)
 @app.get("/")
-def home():
-    return "SoundSense is running"
+def dashboard():
+    return render_template("index.html", home_name=HOME_NAME)
+
+
+# Shows the server's settings, so we can check it's set up right
+@app.get("/api/health")
+def health():
+    return jsonify(ok=True, escalate_after=ESCALATE_AFTER_SECONDS, auto_escalate=AUTO_ESCALATE,
+                   real_sms=bool(os.environ.get("TWILIO_ACCOUNT_SID")))
 
 
 # Shows the list of alerts (the dashboard and Marwan's listener read this)
