@@ -23,7 +23,8 @@ from sounds import DEFAULT_THRESHOLDS
 WINDOW = 0.975  # seconds of audio per guess (YAMNet's frame size)
 HOP = 0.5  # how often we guess
 
-SHORT = {"smoke": "smoke_alarm", "baby": "baby_cry", "door": "doorbell", "kettle": "kettle"}
+SHORT = {"smoke": "smoke_alarm", "glass": "glass_break", "baby": "baby_cry", "siren": "siren",
+         "door": "doorbell", "phone": "phone", "kettle": "kettle"}
 
 log = logging.getLogger("soundsense")
 
@@ -72,7 +73,7 @@ def connect_arduino(args):
 
 
 def run_simulate(ctrl: Controller, link) -> None:
-    print("Simulate mode. Type: smoke, baby, door, kettle, ok, q")
+    print("Simulate mode. Type: smoke, glass, baby, siren, door, phone, kettle, ok, q")
     commands: "queue.Queue[str]" = queue.Queue()
 
     def read_stdin():

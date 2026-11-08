@@ -62,6 +62,9 @@ ALISHA_NAMES = {
     "baby_cry": "baby crying",
     "doorbell": "doorbell",
     "kettle": "kettle",
+    "glass_break": "glass breaking",
+    "phone": "phone ringing",
+    "siren": "emergency siren",
 }
 
 
