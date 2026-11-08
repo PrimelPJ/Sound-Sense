@@ -10,7 +10,7 @@ and skips it, so a typo never crashes anything.
 SOUND_CLASSES = {
     "smoke_alarm": ["Smoke detector, smoke alarm", "Fire alarm", "Alarm"],
     "baby_cry": ["Baby cry, infant cry", "Crying, sobbing"],
-    "doorbell": ["Doorbell", "Ding-dong", "Knock"],
+    "doorbell": ["Doorbell", "Ding-dong", "Knock", "Chime", "Ding", "Bell"],
     "kettle": ["Kettle whistle", "Whistle", "Steam whistle", "Boiling"],
 }
 
@@ -18,7 +18,7 @@ SOUND_CLASSES = {
 DEFAULT_THRESHOLDS = {
     "smoke_alarm": 0.25,
     "baby_cry": 0.30,
-    "doorbell": 0.30,
+    "doorbell": 0.15,
     "kettle": 0.30,
 }
 
