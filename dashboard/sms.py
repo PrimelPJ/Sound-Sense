@@ -82,7 +82,15 @@ def send_sms(to, body, written_by=None):
         try:
             from twilio.rest import Client  # pip install twilio
             client = Client(api_key, api_secret, sid) if api_key and api_secret else Client(sid, token)
-            msg = client.messages.create(to=to, from_=sender, body=body)
+            try:
+                msg = client.messages.create(to=to, from_=sender, body=body)
+            except Exception as exc:
+                # Trial accounts may only send Twilio's predefined templates, so send that instead.
+                if "template" not in str(exc).lower():
+                    raise
+                template = os.environ.get("TWILIO_TRIAL_TEMPLATE", "sms_event_notifications")
+                msg = client.messages.create(to=to, from_=sender, body=template)
+                record["note"] = f"trial account, sent Twilio template '{template}' instead of the full text"
             record.update(mode="twilio", ok=True, sid=msg.sid)
         except Exception as exc:  # keep the demo alive even if a text fails
             record.update(mode="twilio", ok=False, error=str(exc))
