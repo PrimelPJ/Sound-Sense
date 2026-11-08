@@ -52,6 +52,14 @@ backup that does the same job and can be used with `--backend soundsense`.
 
 Start Alisha's dashboard first (see `dashboard/`). It listens on `http://localhost:5000`.
 
+On a Mac, port 5000 is usually taken by AirPlay Receiver. Use another port and point the
+listener at it:
+
+```bash
+PORT=5001 python app.py                           # in dashboard/
+python listener.py --api http://localhost:5001    # in listener/
+```
+
 ### 1b. Backup server (only if you are not using the dashboard API)
 
 ```bash
