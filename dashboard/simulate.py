@@ -3,16 +3,18 @@
 Start the server first (python app.py), then in a second terminal:
   python simulate.py
 
-Keys:  s = smoke alarm   d = doorbell   b = baby crying   k = knocking
-       o = press "I'm OK"   q = quit
+Keys:  s = smoke alarm   g = glass breaking   b = baby crying   e = emergency siren
+       d = doorbell   p = phone ringing   o = press "I'm OK"   q = quit
 """
 import json
 import os
 import urllib.error
 import urllib.request
 
-SERVER = os.environ.get("SOUNDSENSE_URL", "http://localhost:5000")
-SOUNDS = {"s": ("smoke alarm", 0.94), "d": ("doorbell", 0.88), "b": ("baby crying", 0.81), "k": ("knocking", 0.77)}
+SERVER = os.enviro
+SOUNDS = {"s": ("smoke alarm", 0.94), "g": ("glass breaking", 0.86), "b": ("baby crying", 0.81),
+          "e": ("emergency siren", 0.83), "d": ("doorbell", 0.88), "p": ("phone ringing", 0.79)}
+
 
 
 def post(path, body=None):
@@ -41,7 +43,7 @@ def main():
             status, data = post("/api/events/latest/ack")
             print("I'm OK pressed ->", "acknowledged" if status == 200 else data.get("error"))
         else:
-            print("Use s, d, b, k, o or q")
+            print("Use s, g, b, e, d, p, o or q")
 
 
 if __name__ == "__main__":
