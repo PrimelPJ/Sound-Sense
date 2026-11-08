@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pytest httpx
+      - run: python -m pytest -q
+
+  listener:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: listener
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The tests don't load the sound model, so TensorFlow and the mic library are skipped.
+      - run: pip install numpy requests pyserial pytest
+      - run: python -m pytest -q
