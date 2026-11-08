@@ -14,7 +14,7 @@ app = Flask(__name__)
 # How many seconds someone has to press "I'm OK" (60 unless we change it)
 ESCALATE_AFTER_SECONDS = int(os.environ.get("ESCALATE_AFTER", "60"))
 # Sounds that are dangerous (these get texted if nobody responds)
-URGENT_SOUNDS = {"smoke alarm", "fire alarm", "carbon monoxide alarm", "baby crying"}
+URGENT_SOUNDS = {"smoke alarm", "fire alarm", "carbon monoxide alarm", "glass breaking", "baby crying"}
 # Set AUTO_ESCALATE=0 if the listener should decide when to text instead
 AUTO_ESCALATE = os.environ.get("AUTO_ESCALATE", "1") == "1"
 # The person's name used in the texts

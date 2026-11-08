@@ -19,10 +19,20 @@ FRIENDLY_SOUND = {
     "smoke alarm": "smoke alarm",
     "fire alarm": "fire alarm",
     "carbon monoxide alarm": "carbon monoxide alarm",
+    "glass breaking": "glass breaking",
     "baby crying": "baby crying",
+    "emergency siren": "emergency siren",
     "doorbell": "doorbell",
-    "knocking": "someone knocking",
+    "phone ringing": "phone ringing",
     "kettle": "kettle whistling",
+}
+
+# Extra advice added to urgent texts, so the contact knows what to do.
+ADVICE = {
+    "smoke alarm": "If you see smoke or fire, call 911.",
+    "fire alarm": "If you see smoke or fire, call 911.",
+    "carbon monoxide alarm": "Get them out to fresh air and call 911.",
+    "glass breaking": "It could be a fall or a break-in. If you can't reach them, call 911.",
 }
 
 def _facts(event, home_name, wait_seconds):
@@ -32,18 +42,19 @@ def _facts(event, home_name, wait_seconds):
         "time": datetime.fromisoformat(event["detected_at"]).strftime("%I:%M %p").lstrip("0"),
         "wait": wait_seconds,
         "urgent": event["urgent"],
+        "advice": ADVICE.get(event["sound"], ""),
     }
-
+            
 
 def template_message(event, home_name, wait_seconds):
     """Fixed wording. Always works and never invents anything."""
     f = _facts(event, home_name, wait_seconds)
     if f["urgent"]:
-        return (f"SoundSense ALERT: {f['home_name']}'s {f['sound']} went off at {f['time']} and they "
-                f"haven't responded in {f['wait']} seconds. Please check on them now. "
-                f"If you see smoke or fire, call 911.")
-    return (f"SoundSense: {f['home_name']}'s home detected a {f['sound']} at {f['time']} and they "
-            f"haven't responded in {f['wait']} seconds. You may want to check in.")
+        text = (f"SoundSense ALERT: {f['sound'].capitalize()} at {f['home_name']}'s home at {f['time']}, "
+                f"and no response in {f['wait']} seconds. Please check on them now.")
+        return f"{text} {f['advice']}".strip()
+    return (f"SoundSense: {f['sound'].capitalize()} at {f['home_name']}'s home at {f['time']}, "
+            f"and no response in {f['wait']} seconds. You may want to check in.") 
 
 
 def compose_alert_message(event, home_name, wait_seconds):
