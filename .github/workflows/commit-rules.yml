@@ -1,0 +1,33 @@
+name: Commit rules
+
+# Fails if any commit message names an AI tool or has a co-author line,
+# or if any file names an AI tool. Same rules as .githooks, for anyone who
+# has not turned the hooks on.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Commit messages and authors
+        run: |
+          hits=$(git log --format='%h %an <%ae>%n%B' | grep -inE 'cl[a]ude|anthr[o]pic|co-authored-by|generated with' || true)
+          if [ -n "$hits" ]; then
+            echo "These commits break the commit rules:"
+            echo "$hits"
+            exit 1
+          fi
+      - name: Files
+        run: |
+          hits=$(git grep -inE 'cl[a]ude|anthr[o]pic' || true)
+          if [ -n "$hits" ]; then
+            echo "These lines name an AI tool:"
+            echo "$hits"
+            exit 1
+          fi
