@@ -19,15 +19,22 @@ def send_sms(to: str, body: str) -> dict:
         account_sid = os.getenv("TWILIO_ACCOUNT_SID")
         api_key = os.getenv("TWILIO_API_KEY")
         api_secret = os.getenv("TWILIO_API_SECRET")
-        from_number = os.getenv("TWILIO_PHONE_NUMBER")
+        auth_token = os.getenv("TWILIO_AUTH_TOKEN")  # the dashboard's setting, works here too
+        from_number = os.getenv("TWILIO_PHONE_NUMBER") or os.getenv("TWILIO_FROM")
 
-        if not all([account_sid, api_key, api_secret, from_number]):
+        if api_key and api_secret:
+            login = (api_key, api_secret)
+        elif auth_token:
+            login = (account_sid, auth_token)
+        else:
+            login = None
+
+        if not (account_sid and login and from_number):
             log.warning("SMS (not really sent) to %s: %s", to, body)
             return {"ok": True, "note": "printed only, Twilio settings not set"}
 
         client = Client(
-            api_key,
-            api_secret,
+            *login,
             account_sid=account_sid,
         )
 

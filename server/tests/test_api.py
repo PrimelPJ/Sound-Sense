@@ -13,7 +13,8 @@ os.environ["DATABASE_URL"] = f"sqlite:///{DB_DIR}/test.db"
 os.environ["TIME_SCALE"] = "0.01"
 os.environ["SEED_CONTACTS_FILE"] = os.path.join(os.path.dirname(__file__), "..", "seed_contacts.json")
 # Never send real texts from tests, even if server/.env has Twilio settings.
-for name in ("TWILIO_ACCOUNT_SID", "TWILIO_API_KEY", "TWILIO_API_SECRET", "TWILIO_PHONE_NUMBER"):
+for name in ("TWILIO_ACCOUNT_SID", "TWILIO_API_KEY", "TWILIO_API_SECRET", "TWILIO_AUTH_TOKEN",
+             "TWILIO_PHONE_NUMBER", "TWILIO_FROM"):
     os.environ[name] = ""
 
 import pytest  # noqa: E402
