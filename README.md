@@ -139,6 +139,29 @@ Useful options:
 
 Everyone builds against these.
 
+### Dashboard API (used by default)
+
+This is what the listener talks to unless you pass `--backend soundsense`. Sound names are
+plain words, like `smoke alarm`, `glass breaking`, `baby crying`, `help request`.
+
+| Method | Path | Use |
+| --- | --- | --- |
+| POST | `/api/events` | New sound, `{"sound": "smoke alarm", "confidence": 0.94}`. The same sound while an alert is open is a repeat |
+| GET | `/api/events` | The 50 newest alerts, with `seconds_left` before a text goes out |
+| GET | `/api/events/{id}` | One alert (`latest` = newest one still waiting) |
+| POST | `/api/events/{id}/ack` | "I'm OK" |
+| POST | `/api/events/{id}/escalate` | Text backup contacts now. `{"by": "button"}` for the "Get help" button |
+| GET, POST | `/api/contacts` | List or add backup contacts |
+| DELETE | `/api/contacts/{id}` | Remove a contact |
+| GET | `/api/messages` | Texts that were sent |
+| POST | `/api/reset` | Clear alerts and texts between demo runs |
+| GET | `/api/health` | Server settings |
+
+Alert `status` is `alerting` (waiting for "I'm OK"), `acknowledged`, `escalated` (texts went out)
+or `info` (doorbell, kettle and other heads-up sounds after the timer).
+
+### Backup server API (`server/`, with `--backend soundsense`)
+
 **Event (listener to API):** `POST /events`
 
 ```json
