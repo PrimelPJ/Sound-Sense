@@ -6,20 +6,16 @@
 <title>SoundSense</title>
 <style>
   :root {
-    --bg: #f6f5f1; --card: #ffffff; --text: #1d1d1b; --muted: #5f5e5a; --line: #dcdad2;
-    --red: #b42318; --red-bg: #fde8e6; --amber: #8a4b00; --amber-bg: #fdf0d5;
-    --green: #1f6f3a; --green-bg: #e3f4e8; --blue: #1d4ed8;
+    --bg: #eef3fb; --card: #ffffff; --text: #14213d; --muted: #5b6475; --line: #d6deeb;
+    --red: #c62828; --red-bg: #fdecea; --amber: #9a5b00; --amber-bg: #fff4dc;
+    --green: #1e7a3d; --green-bg: #e6f5ec; --blue: #1d4ed8;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #151514; --card: #201f1d; --text: #f1efe8; --muted: #b4b2a9; --line: #3a3936;
-      --red: #ff8a80; --red-bg: #3b1714; --amber: #ffc46b; --amber-bg: #3a2a0c;
-      --green: #7ee2a0; --green-bg: #11301c; --blue: #8ab4ff; }
-  }
+  header .sub { color: #dbe6ff; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg);
     color: var(--text); font-size: 17px; line-height: 1.5; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--card); }
+    padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--blue); color: #ffffff;
   h1 { margin: 0; font-size: 22px; }
   h2 { margin: 0 0 12px; font-size: 18px; }
   .sub { color: var(--muted); font-size: 15px; }
