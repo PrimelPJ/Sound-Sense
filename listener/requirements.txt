@@ -4,3 +4,4 @@ pyserial
 sounddevice
 tensorflow>=2.16
 tensorflow-hub
+setuptools<81  # tensorflow-hub still imports pkg_resources
